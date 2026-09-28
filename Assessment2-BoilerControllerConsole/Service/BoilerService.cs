@@ -67,10 +67,6 @@ public class BoilerService : IDisposable
 
             Status = BoilerStatus.Ignition;
             AddNotification("Boiler in Ignition state");
-            if (_cancellationTokenSource.IsCancellationRequested)
-            {
-                return;
-            }
             await RunPhaseAsync("Ignition", 10, _cancellationTokenSource.Token);
             AddNotification("Ignition completed.");
 
@@ -110,7 +106,6 @@ public class BoilerService : IDisposable
     /// </summary>
     public void StopBoiler()
     {
-        CancelProcessing();
         Status = BoilerStatus.Lockout;
         AddNotification("Boiler process has been stopped.");
         _switchService.Toggle();
