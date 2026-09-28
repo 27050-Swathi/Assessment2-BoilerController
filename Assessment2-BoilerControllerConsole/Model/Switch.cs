@@ -1,12 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Assessment2_BoilerControllerConsole.Enums;
 
 namespace Assessment2_BoilerControllerConsole.Model
 {
-    internal class Switch
+    /// <summary>
+    /// Represents the switch class that acts as the start of the application.
+    /// </summary>
+    public class Switch
     {
+        /// <summary>
+        /// Initializes a switch class that sets the default values.
+        /// </summary>
+        public Switch()
+        {
+            SwitchStatus = SwitchStatus.Open;
+        }
+
+        /// <summary>
+        /// Gets or sets the status of the switch.
+        /// </summary>
+        public SwitchStatus SwitchStatus { get; set; }
     }
 }
