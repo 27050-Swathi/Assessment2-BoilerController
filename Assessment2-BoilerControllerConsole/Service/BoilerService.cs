@@ -58,6 +58,12 @@ public class BoilerService : IDisposable
             return;
         }
 
+        if(Status != BoilerStatus.Ready)
+        {
+            AddNotification("Boiler must be in ready state to start. Reset Lockout to continue.");
+            return;
+        }
+
         try
         {
             Status = BoilerStatus.PrePurge;
