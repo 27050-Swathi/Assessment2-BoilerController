@@ -1,4 +1,4 @@
-﻿using Assessment2_BoilerControllerConsole.Enums;
+﻿using Assessment2_BoilerControllerConsole.Model.Enums;
 
 namespace Assessment2_BoilerControllerConsole.Model
 {
