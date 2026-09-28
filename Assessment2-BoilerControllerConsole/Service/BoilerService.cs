@@ -1,25 +1,28 @@
 ﻿using Assessment2_BoilerControllerConsole.Model;
 using Assessment2_BoilerControllerConsole.Model.Enums;
 using Assessment2_BoilerControllerConsole.Persistence;
-using Assessment2_BoilerControllerConsole.Service;
+
+namespace Assessment2_BoilerControllerConsole.Service;
 
 /// <summary>
 /// Boiler service class for the simulation of boiler.
 /// </summary>
-public class BoilerService
+public class BoilerService : IDisposable
 {
     private readonly SwitchService _switchService;
     private readonly LoggerRepository _loggerRepository;
     private readonly List<Notification> _notifications = new List<Notification>();
     public event EventHandler<List<Notification>>? NotificationRaised;
     private readonly object _notificationLock = new object();
+    private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
     public BoilerStatus Status { get; private set; }
-    
+
     /// <summary>
     /// Initializes a boiler with constructor.
     /// </summary>
-    /// <param name="switchService"></param>
-    /// <param name="loggerRepository"></param>
+    /// <param name="switchService">Instance of switch service.</param>
+    /// <param name="loggerRepository">Instance of log repository.</param>
     public BoilerService(SwitchService switchService, LoggerRepository loggerRepository)
     {
         _switchService = switchService;
@@ -55,31 +58,28 @@ public class BoilerService
             return;
         }
 
-        Status = BoilerStatus.Ready;
-
-        if (Status != BoilerStatus.Ready)
-        {
-            AddNotification("Boiler must be in ready state to start function.");
-            return;
-        }
-
         try
         {
             Status = BoilerStatus.PrePurge;
             AddNotification("Boiler in Pre Purge state");
-            await RunPhaseAsync("PrePurge", 3);
-            AddNotification("Pre Purge has been completed.");
+            await RunPhaseAsync("PrePurge", 10, _cancellationTokenSource.Token);
+            AddNotification("Pre Purge completed.");
 
             Status = BoilerStatus.Ignition;
             AddNotification("Boiler in Ignition state");
-            await RunPhaseAsync("Ignition", 5);
-            AddNotification("Ignition has been completed.");
+            await RunPhaseAsync("Ignition", 10, _cancellationTokenSource.Token);
+            AddNotification("Ignition completed.");
 
             Status = BoilerStatus.Operational;
-            AddNotification("Boiler is now in operational state.");
+            AddNotification("Boiler is now operational.");
 
         }
-        catch(Exception ex)
+        catch (OperationCanceledException ex)
+        {
+            Status = BoilerStatus.Lockout;
+            AddNotification($"{ex.Message} - System in Lockout");
+        }
+        catch (Exception ex)
         {
             Status = BoilerStatus.Lockout;
             AddNotification($"{ex.Message} - System in Lockout");
@@ -89,15 +89,15 @@ public class BoilerService
     /// <summary>
     /// Shows the countdown for the execution.
     /// </summary>
-    /// <param name="phase"></param>
-    /// <param name="seconds"></param>
+    /// <param name="phase">Phase which the operation is in.</param>
+    /// <param name="seconds">Time taken to complete.</param>
     /// <returns></returns>
-    private async Task RunPhaseAsync(string phase, int seconds)
+    private async Task RunPhaseAsync(string phase, int seconds, CancellationToken cancellationToken)
     {
-        for(int i = seconds; i > 0; i--)
+        for (int i = seconds; i > 0; i--)
         {
             AddNotification($"Time remaining for {phase} is {i}");
-            await Task.Delay(1000);
+            await Task.Delay(1000, cancellationToken);
         }
     }
 
@@ -106,15 +106,10 @@ public class BoilerService
     /// </summary>
     public void StopBoiler()
     {
-        if(Status != BoilerStatus.Operational)
-        {
-            AddNotification("Boiler is not operational.");
-            return;
-        }
-
         Status = BoilerStatus.Lockout;
         AddNotification("Boiler process has been stopped.");
         _switchService.Toggle();
+        AddNotification($"Switch has been toggled. Switch status : {_switchService.State}");
     }
 
     /// <summary>
@@ -122,7 +117,7 @@ public class BoilerService
     /// </summary>
     public void SimulateBoilerError()
     {
-        if(Status != BoilerStatus.Operational)
+        if (Status != BoilerStatus.Operational)
         {
             AddNotification("Error simulation can only happen when the boiler is in operational state.");
             return;
@@ -142,7 +137,7 @@ public class BoilerService
     /// <summary>
     /// Adds notification and logging of the operations.
     /// </summary>
-    /// <param name="message"></param>
+    /// <param name="message">Message to display.</param>
     public void AddNotification(string message)
     {
         Notification notification = new Notification(message);
@@ -154,5 +149,21 @@ public class BoilerService
         }
         _loggerRepository.SaveData(new Logger("Event Raised:", message));
         NotificationRaised?.Invoke(this, snapshot);
+    }
+
+    /// <summary>
+    /// Cancel the boiler processing.
+    /// </summary>
+    public void CancelProcessing()
+    {
+        _cancellationTokenSource.Cancel();
+    }
+
+    /// <summary>
+    /// Dispose the cancel operation.
+    /// </summary>
+    public void Dispose()
+    {
+        _cancellationTokenSource.Dispose();
     }
 }

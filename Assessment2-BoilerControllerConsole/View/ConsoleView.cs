@@ -4,12 +4,18 @@ using Assessment2_BoilerControllerConsole.Model.Enums;
 
 namespace Assessment2_BoilerControllerConsole.View
 {
+    /// <summary>
+    /// Console View class that interacts with the user.
+    /// </summary>
     public class ConsoleView
     {
         private readonly object _consoleLock = new object();
         private const int NotificationHeight = 10;
         private const int ApplicationStartLine = NotificationHeight + 1;
 
+        /// <summary>
+        /// Initializes the console view.
+        /// </summary>
         public ConsoleView()
         {
             Console.Clear();
@@ -19,6 +25,9 @@ namespace Assessment2_BoilerControllerConsole.View
             DrawApplicationArea();
         }
         
+        /// <summary>
+        /// Draw the area for notification.
+        /// </summary>
         private void DrawNotificationArea()
         {
             lock (_consoleLock)
@@ -29,10 +38,13 @@ namespace Assessment2_BoilerControllerConsole.View
                     ClearCurrentLine();
                 }
                 Console.SetCursorPosition(0, 0);
-                Console.Write("===== Notifications ======");
+                Console.Write("========= NOTIFICATIONS =========");
             }
         }
 
+        /// <summary>
+        /// Draw the area for application and displays the menu.
+        /// </summary>
         private void DrawApplicationArea()
         {
             lock (_consoleLock)
@@ -50,6 +62,10 @@ namespace Assessment2_BoilerControllerConsole.View
             }
         }
 
+        /// <summary>
+        /// Returns the menu option chosen by user.
+        /// </summary>
+        /// <returns></returns>
         public MenuOptions? GetMenuOptions()
         {
             while (true)
@@ -91,6 +107,10 @@ namespace Assessment2_BoilerControllerConsole.View
             }
         }
 
+        /// <summary>
+        /// Displays the list of notifications to the console.
+        /// </summary>
+        /// <param name="notifications">List of notifications.</param>
         public void ShowNotifications(List<Notification> notifications)
         {
             lock (_consoleLock)
@@ -118,6 +138,10 @@ namespace Assessment2_BoilerControllerConsole.View
             }
         }
 
+        /// <summary>
+        /// Writes the lines into the console.
+        /// </summary>
+        /// <param name="message">Message to be displayed.</param>
         private void WriteLineSafely(string message)
         {
             int width = Math.Max(1, Console.WindowWidth - 1);
@@ -129,6 +153,9 @@ namespace Assessment2_BoilerControllerConsole.View
             Console.WriteLine(message);
         }
 
+        /// <summary>
+        /// Clears the current line.
+        /// </summary>
         private void ClearCurrentLine()
         {
             int width = Math.Max(1, Console.WindowWidth - 1);
@@ -136,6 +163,10 @@ namespace Assessment2_BoilerControllerConsole.View
             Console.SetCursorPosition(0, Console.CursorTop);
         }
 
+        /// <summary>
+        /// Reads the input from the user using ReadKey().
+        /// </summary>
+        /// <returns>Input given by user.</returns>
         private string ReadInput()
         {
             StringBuilder input = new StringBuilder();
@@ -169,9 +200,21 @@ namespace Assessment2_BoilerControllerConsole.View
             }
         }
 
+        /// <summary>
+        /// Display the recent log details to the console.
+        /// </summary>
+        /// <param name="recentOrders">Recently logged details.</param>
         public void DisplayLogDetails(List<Logger> recentOrders)
         {
-            
+            Console.SetCursorPosition(0, ApplicationStartLine + 9);
+            if (!recentOrders.Any())
+            {
+                Console.Write("No logs to display");
+            }
+            foreach (Logger logger in recentOrders)
+            {
+                Console.Write($"{logger.TimeStamp} {logger.EventName}  {logger.EventData}\n");
+            }
         }
     }
 }

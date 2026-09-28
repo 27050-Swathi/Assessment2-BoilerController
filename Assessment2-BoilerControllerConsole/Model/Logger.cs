@@ -1,7 +1,7 @@
 ﻿namespace Assessment2_BoilerControllerConsole.Model
 {
     /// <summary>
-    /// Logger class that helps in logging the events.
+    /// Logger class that helps in logging the events into a CSV file.
     /// </summary>
     public class Logger
     {

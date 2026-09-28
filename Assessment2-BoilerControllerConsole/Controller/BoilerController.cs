@@ -6,6 +6,9 @@ using Assessment2_BoilerControllerConsole.View;
 
 namespace Assessment2_BoilerControllerConsole.Controller
 {
+    /// <summary>
+    /// Boiler controller class that coordinates between the service and view.
+    /// </summary>
     public class BoilerController
     {
         private readonly SwitchService _switchService;
@@ -13,6 +16,13 @@ namespace Assessment2_BoilerControllerConsole.Controller
         private readonly LoggerRepository _loggerRepository;
         private readonly ConsoleView _consoleView;
 
+        /// <summary>
+        /// Initializes a boiler controller class.
+        /// </summary>
+        /// <param name="service">Instance of switch service.</param>
+        /// <param name="boilerService">Instance of boiler service.</param>
+        /// <param name="loggerRepository">Instance of logger repository.</param>
+        /// <param name="consoleView">Instance of console view.</param>
         public BoilerController(SwitchService service, BoilerService boilerService, LoggerRepository loggerRepository, ConsoleView consoleView)
         {
             _switchService = service;
@@ -21,6 +31,10 @@ namespace Assessment2_BoilerControllerConsole.Controller
             _consoleView = consoleView;
         }
 
+        /// <summary>
+        /// Start method to start the simulation of boiler.
+        /// </summary>
+        /// <returns>Task</returns>
         public async Task Start()
         {
             _loggerRepository.SaveData(new Logger("Boiler Initialized", ""));
@@ -57,6 +71,9 @@ namespace Assessment2_BoilerControllerConsole.Controller
             }
         }
 
+        /// <summary>
+        /// Displays the log to the console.
+        /// </summary>
         private void HandleViewEventLog()
         {
             List<Logger> logs = _loggerRepository.GetData();
@@ -64,6 +81,11 @@ namespace Assessment2_BoilerControllerConsole.Controller
             _consoleView.DisplayLogDetails(recentOrders);
         }
 
+        /// <summary>
+        /// Notification subscription method.
+        /// </summary>
+        /// <param name="sender">The object from where notification is from.</param>
+        /// <param name="notifications">List of notifications.</param>
         private void OnNotificationRaised(object? sender, List<Notification> notifications)
         {
             _consoleView.ShowNotifications(notifications);

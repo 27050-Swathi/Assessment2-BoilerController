@@ -8,7 +8,7 @@
         /// <summary>
         /// Initializes a notification class.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">Notification to be stored.</param>
         public Notification(string message)
         {
             Message = message;
