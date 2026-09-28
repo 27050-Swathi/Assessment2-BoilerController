@@ -1,13 +1,13 @@
 ﻿using Assessment2_BoilerControllerConsole.Model;
 using Assessment2_BoilerControllerConsole.Persistence;
+using Assessment2_BoilerControllerConsole.Service;
 
 namespace Assessment2_BoilerControllerConsole
 {
     internal class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
-
         }
     }
 }

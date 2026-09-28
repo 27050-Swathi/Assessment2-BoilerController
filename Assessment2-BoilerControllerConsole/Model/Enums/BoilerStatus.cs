@@ -1,4 +1,4 @@
-﻿namespace Assessment2_BoilerControllerConsole.Enums
+﻿namespace Assessment2_BoilerControllerConsole.Model.Enums
 {
     /// <summary>
     /// Represents the status of the boiler.
