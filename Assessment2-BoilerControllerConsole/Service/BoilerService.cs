@@ -2,6 +2,7 @@
 using Assessment2_BoilerControllerConsole.Model.Enums;
 using Assessment2_BoilerControllerConsole.Persistence;
 using Assessment2_BoilerControllerConsole.Service;
+using System.Threading;
 
 /// <summary>
 /// Boiler service class for the simulation of boiler.
@@ -13,6 +14,9 @@ public class BoilerService
     private readonly List<Notification> _notifications = new List<Notification>();
     public event EventHandler<List<Notification>>? NotificationRaised;
     private readonly object _notificationLock = new object();
+    private readonly object _boilerLock = new object();
+    private Timer? _timer;
+    private int _secondsRemaining;
     public BoilerStatus Status { get; private set; }
     
     /// <summary>
@@ -156,3 +160,493 @@ public class BoilerService
         NotificationRaised?.Invoke(this, snapshot);
     }
 }
+
+//using Assessment2_BoilerControllerConsole.Model;
+
+//using Assessment2_BoilerControllerConsole.Persistence;
+
+//using System.Threading;
+
+
+
+//namespace Assessment2_BoilerControllerConsole.Service
+
+//{
+
+//    public class BoilerService : IDisposable
+
+//    {
+
+//        private readonly SwitchService _switchService;
+
+//        private readonly LoggerRepository _loggerRepository;
+
+
+
+//        private readonly object _boilerLock = new object();
+
+
+
+//        private Timer? _timer;
+
+
+
+//        private int _remainingSeconds;
+
+
+
+//        public BoilerStatus Status { get; private set; }
+
+
+
+//        public BoilerService(
+
+//        SwitchService switchService,
+
+//        LoggerRepository loggerRepository)
+
+//        {
+
+//            _switchService = switchService;
+
+//            _loggerRepository = loggerRepository;
+
+
+
+//            Status = BoilerStatus.Lockout;
+
+//        }
+
+
+
+//        public void Start()
+
+//        {
+
+//            lock (_boilerLock)
+
+//            {
+
+//                if (Status != BoilerStatus.Ready)
+
+//                {
+
+//                    Console.WriteLine(
+
+//                    "Boiler must be in Ready state.");
+
+
+
+//                    return;
+
+//                }
+
+
+
+//                if (!_switchService.IsClosed())
+
+//                {
+
+//                    Console.WriteLine(
+
+//                    "Run Interlock switch must be Closed.");
+
+
+
+//                    return;
+
+//                }
+
+
+
+//                Status = BoilerStatus.PrePurge;
+
+//                _remainingSeconds = 10;
+
+
+
+//                Log(
+
+//                "Pre-Purge started",
+
+//                "");
+
+
+
+//                Console.WriteLine(
+
+//                "Pre-Purge started.");
+
+
+
+//                StartTimer();
+
+//            }
+
+//        }
+
+
+
+//        private void StartTimer()
+
+//        {
+
+//            _timer?.Dispose();
+
+
+
+//            _timer = new Timer(
+
+//            ProcessBoilerSequence,
+
+//            null,
+
+//             TimeSpan.Zero,
+
+//            TimeSpan.FromSeconds(1));
+
+//        }
+
+
+
+//        private void ProcessBoilerSequence(object? state)
+
+//        {
+
+//            lock (_boilerLock)
+
+//            {
+
+//                if (Status != BoilerStatus.PrePurge &&
+
+//                Status != BoilerStatus.Ignition)
+
+//                {
+
+//                    return;
+
+//                }
+
+
+
+//                Console.WriteLine(
+
+//                $"{Status}: {_remainingSeconds} seconds remaining");
+
+
+
+//                _remainingSeconds--;
+
+
+
+//                if (_remainingSeconds > 0)
+
+//                {
+
+//                    return;
+
+//                }
+
+
+
+//                if (Status == BoilerStatus.PrePurge)
+
+//                {
+
+//                    CompletePrePurge();
+
+//                }
+
+//                else if (Status == BoilerStatus.Ignition)
+
+//                {
+
+//                    CompleteIgnition();
+
+//                }
+
+//            }
+
+//        }
+
+
+
+//        private void CompletePrePurge()
+
+//        {
+
+//            Log(
+
+//            "Pre-Purge completed.",
+
+//            "");
+
+
+
+//            Status = BoilerStatus.Ignition;
+
+
+
+//            _remainingSeconds = 10;
+
+
+
+//            Log(
+
+//            "Ignition phase started.",
+
+//            "");
+
+
+
+//            Console.WriteLine(
+
+//            "Ignition phase started.");
+
+//        }
+
+
+
+//        private void CompleteIgnition()
+
+//        {
+
+//            Log(
+
+//            "Ignition phase completed.",
+
+//            "");
+
+
+
+//            Status = BoilerStatus.Operational;
+
+
+
+//            Log(
+
+//            "Boiler now operational.",
+
+//            "");
+
+
+
+//            Console.WriteLine(
+
+//            "Boiler now operational.");
+
+
+
+//            StopTimer();
+
+//        }
+
+
+
+//        public bool ResetLockout()
+
+//        {
+
+//            lock (_boilerLock)
+
+//            {
+
+//                if (!_switchService.IsClosed())
+
+//                {
+
+//                    Console.WriteLine(
+
+//                    "Run Interlock switch must be Closed.");
+
+
+
+//                    return false;
+
+//                }
+
+
+
+//                if (Status != BoilerStatus.Lockout)
+
+//                {
+
+//                    Console.WriteLine(
+
+//                    "Boiler is not in Lockout.");
+
+
+
+//                    return false;
+
+//                }
+
+
+
+//                Status = BoilerStatus.Ready;
+
+
+
+//                Log(
+
+//                "Boiler Status changed to Ready",
+
+//                "");
+
+
+
+//                return true;
+
+//            }
+
+//        }
+
+
+
+//        public void Stop()
+
+//        {
+
+//            lock (_boilerLock)
+
+//            {
+
+//                if (Status != BoilerStatus.Operational)
+
+//                {
+
+//                    Console.WriteLine(
+
+//                    "Boiler is not Operational.");
+
+
+
+//                    return;
+
+//                }
+
+
+
+//                Status = BoilerStatus.Lockout;
+
+
+
+//                StopTimer();
+
+
+
+//                Log(
+
+//                "Boiler stopped",
+
+//                "");
+
+//            }
+
+//        }
+
+
+
+//        public void SimulateError()
+
+//        {
+
+//            lock (_boilerLock)
+
+//            {
+
+//                if (Status != BoilerStatus.Operational)
+
+//                {
+
+//                    Console.WriteLine(
+
+//                    "Error simulation is only allowed " +
+
+//                    "when boiler is Operational.");
+
+
+
+//                    return;
+
+//                }
+
+
+
+//                Status = BoilerStatus.Lockout;
+
+
+
+//                StopTimer();
+
+
+
+//                Console.WriteLine(
+
+//                "Error: Simulated boiler failure. " +
+
+//                "System in Lockout.");
+
+
+
+//                Log(
+
+//                "Boiler Error",
+
+//                "Simulated boiler failure");
+
+//            }
+
+//        }
+
+
+
+//        private void StopTimer()
+
+//        {
+
+//            _timer?.Dispose();
+
+//            _timer = null;
+
+//        }
+
+
+
+//        private void Log(
+
+//        string eventName,
+
+//        string eventData)
+
+//        {
+
+//            Logger logger =
+
+//            new Logger(eventName, eventData);
+
+
+
+//            _loggerRepository.SaveLog(logger);
+
+//        }
+
+
+
+//        public void Dispose()
+
+//        {
+
+//            lock (_boilerLock)
+
+//            {
+
+//                StopTimer();
+
+//            }
+
+//        }
+
+//    }
+
+//}
